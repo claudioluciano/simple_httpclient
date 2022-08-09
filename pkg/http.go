@@ -1,4 +1,4 @@
-package main
+package http
 
 import (
 	"context"
@@ -18,7 +18,7 @@ const (
 	DELETE HTTPMethod = "DELETE"
 )
 
-type HTTPRequest struct {
+type Request struct {
 	URL         string
 	Method      HTTPMethod
 	ContentType string
@@ -26,14 +26,14 @@ type HTTPRequest struct {
 	Body        string
 }
 
-type HTTPResponse struct {
+type Response struct {
 	Body       string
 	Headers    map[string]string
 	StatusCode int32
 	Time       int64
 }
 
-type HTTPClient struct {
+type Client struct {
 	Client      *fasthttp.Client
 	baseURL     string
 	contentType string
@@ -48,7 +48,7 @@ type NewClientOptions struct {
 	TLSCert            string
 }
 
-type SendRequestOptions struct {
+type DoOptions struct {
 	StartTime *time.Time
 	Request   *HTTPRequest
 }
