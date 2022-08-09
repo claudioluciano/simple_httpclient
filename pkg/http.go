@@ -2,6 +2,8 @@ package http
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -23,6 +25,7 @@ type Request struct {
 	Method      HTTPMethod
 	ContentType string
 	Headers     map[string]string
+	Query       map[string]string
 	Body        string
 }
 
@@ -87,19 +90,29 @@ func (h *Client) Do(ctx context.Context, opts *DoOptions) (*Response, error) {
 	defer fasthttp.ReleaseRequest(req)
 	defer fasthttp.ReleaseResponse(res)
 
-	req.SetRequestURI(h.getURL(opts.Request.URL))
-	req.Header.SetMethod(string(opts.Request.Method))
+	u := h.getURL(opts.Request.URL)
+
+	qp := url.Values{}
+	for k, v := range opts.Request.Query {
+		qp.Add(k, fmt.Sprint(v))
+	}
+
+	if len(qp) > 0 {
+		u = fmt.Sprintf("%s?%s", u, qp.Encode())
+	}
 
 	cType := h.contentType
 	if opts.Request.ContentType != "" {
 		cType = opts.Request.ContentType
 	}
 
+	req.SetRequestURI(u)
+	req.Header.SetMethod(string(opts.Request.Method))
 	req.Header.SetContentType(cType)
 	req.SetBodyString(opts.Request.Body)
 
-	for key, value := range opts.Request.Headers {
-		req.Header.Set(key, value)
+	for k, v := range opts.Request.Headers {
+		req.Header.Set(k, v)
 	}
 
 	if err := h.Client.DoTimeout(req, res, h.timeout); err != nil {
